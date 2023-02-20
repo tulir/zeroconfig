@@ -3,7 +3,7 @@ A relatively simple declarative config format for [zerolog](https://github.com/r
 
 Meant to be used as YAML, but JSON struct tags are included as well.
 
-## Reference
+## Config reference
 ```yaml
 # Global minimum log level. Defaults to trace.
 min_level: trace
@@ -18,6 +18,7 @@ caller: false
 # Some types have additional custom configuration
 writers:
 # `stdout` and `stderr` write to the corresponding standard IO streams.
+# They have no custom configuration fields, the extra fields below showcase the fields that can be added to any writer.
 - # The type of writer.
   type: stdout
   # The format to write. Available formats are json, pretty and pretty-colored. Defaults to json.
@@ -60,4 +61,40 @@ writers:
 # `journald` writes to systemd's logging service using https://github.com/coreos/go-systemd.
 # It has no custom configuration fields.
 - type: journald
+```
+
+## Usage example
+```go
+package main
+
+import (
+	"github.com/rs/zerolog"
+	"go.mau.fi/zeroconfig"
+	"gopkg.in/yaml.v3"
+)
+
+func prepareLog(yamlConfig []byte) (*zerolog.Logger, error) {
+	var cfg zeroconfig.Config
+	err := yaml.Unmarshal(yamlConfig, &cfg)
+	if err != nil {
+		return nil, err
+	}
+	return cfg.Compile()
+}
+
+// This should obviously be loaded from a file rather than hardcoded
+const logConfig = `
+min_level: debug
+writers:
+- type: stdout
+  format: pretty-colored
+`
+
+func main() {
+	log, err := prepareLog([]byte(logConfig))
+	if err != nil {
+		panic(err)
+	}
+	log.Info().Msg("Logger initialized")
+}
 ```
