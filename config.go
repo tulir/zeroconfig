@@ -104,12 +104,18 @@ type Config struct {
 	Caller    bool  `json:"caller,omitempty" yaml:"caller,omitempty"`
 }
 
+// Outputs used for the stdout and stderr writer types.
+var (
+	Stdout io.Writer = os.Stdout
+	Stderr io.Writer = os.Stderr
+)
+
 func (wc *WriterConfig) compileMain() (io.Writer, error) {
 	switch wc.Type {
 	case WriterTypeStdout:
-		return os.Stdout, nil
+		return Stdout, nil
 	case WriterTypeStderr:
-		return os.Stderr, nil
+		return Stderr, nil
 	case WriterTypeFile:
 		writer := &lumberjack.Logger{
 			Filename:   wc.Filename,
