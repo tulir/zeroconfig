@@ -85,8 +85,8 @@ type WriterConfig struct {
 	Type   WriterType `json:"type" yaml:"type"`
 	Format LogFormat  `json:"format,omitempty" yaml:"format,omitempty"`
 
-	MinLevel zerolog.Level `json:"min_level,omitempty" yaml:"min_level,omitempty"`
-	MaxLevel zerolog.Level `json:"max_level,omitempty" yaml:"max_level,omitempty"`
+	MinLevel *zerolog.Level `json:"min_level,omitempty" yaml:"min_level,omitempty"`
+	MaxLevel *zerolog.Level `json:"max_level,omitempty" yaml:"max_level,omitempty"`
 
 	// Only applies when format=console or format=console-colored
 	TimeFormat string `json:"time_format,omitempty" yaml:"time_format,omitempty"`
@@ -98,7 +98,7 @@ type WriterConfig struct {
 // Config contains all the configuration to create a zerolog logger.
 type Config struct {
 	Writers  []WriterConfig `json:"writers,omitempty" yaml:"writers,omitempty"`
-	MinLevel zerolog.Level  `json:"min_level,omitempty" yaml:"min_level,omitempty"`
+	MinLevel *zerolog.Level `json:"min_level,omitempty" yaml:"min_level,omitempty"`
 
 	Timestamp *bool `json:"timestamp,omitempty" yaml:"timestamp,omitempty"`
 	Caller    bool  `json:"caller,omitempty" yaml:"caller,omitempty"`
@@ -147,6 +147,13 @@ func (wc *WriterConfig) compileMain() (io.Writer, error) {
 	}
 }
 
+func levelPtr(ptr *zerolog.Level) zerolog.Level {
+	if ptr == nil {
+		return zerolog.NoLevel
+	}
+	return *ptr
+}
+
 // Compile creates an io.Writer instance out of the configuration in this struct.
 func (wc *WriterConfig) Compile() (io.Writer, error) {
 	output, err := wc.compileMain()
@@ -172,15 +179,15 @@ func (wc *WriterConfig) Compile() (io.Writer, error) {
 	default:
 		return nil, fmt.Errorf("unknown format %q", wc.Format)
 	}
-	if wc.MinLevel != zerolog.NoLevel || wc.MaxLevel != zerolog.NoLevel {
-		output = MinMaxLevelWriter(output, wc.MinLevel, wc.MaxLevel)
+	if wc.MinLevel != nil || wc.MaxLevel != nil {
+		output = MinMaxLevelWriter(output, levelPtr(wc.MinLevel), levelPtr(wc.MaxLevel))
 	}
 	return output, nil
 }
 
 // Compile creates a zerolog.Logger instance out of the configuration in this struct.
 func (c *Config) Compile() (*zerolog.Logger, error) {
-	if len(c.Writers) == 0 || c.MinLevel == zerolog.Disabled {
+	if len(c.Writers) == 0 || (c.MinLevel != nil && *c.MinLevel == zerolog.Disabled) {
 		log := zerolog.Nop()
 		return &log, nil
 	}
@@ -206,8 +213,8 @@ func (c *Config) Compile() (*zerolog.Logger, error) {
 		with = with.Caller()
 	}
 	log := with.Logger()
-	if c.MinLevel != zerolog.NoLevel {
-		log.Level(c.MinLevel)
+	if c.MinLevel != nil {
+		log = log.Level(*c.MinLevel)
 	}
 	return &log, nil
 }

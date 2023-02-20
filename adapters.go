@@ -39,5 +39,5 @@ func (mlw minMaxLevelWriter) WriteLevel(l zerolog.Level, p []byte) (n int, err e
 	if (mlw.MinLevel == zerolog.NoLevel || l >= mlw.MinLevel) && (mlw.MaxLevel == zerolog.NoLevel || l <= mlw.MaxLevel) {
 		return mlw.LevelWriter.WriteLevel(l, p)
 	}
-	return 0, nil
+	return len(p), nil
 }
