@@ -23,6 +23,9 @@ writers:
   type: stdout
   # The format to write. Available formats are json, pretty and pretty-colored. Defaults to json.
   format: pretty-colored
+  # If format is pretty or pretty-colored, time_format can be used to specify how timestamps are formatted.
+  # Uses Go time formatting https://pkg.go.dev/time#pkg-constants and defaults to RFC3339 (2006-01-02T15:04:05Z07:00).
+  time_format: 2006-01-02 15:04:05
   # Minimum level for this writer. Defaults to no level (i.e. inherited from root min_level).
   # This can only reduce the amount of logs written to this writer, levels below the global min_level are never logged.
   min_level: info

@@ -12,7 +12,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -52,6 +54,22 @@ func TestWriterConfig_Compile_Stdout(t *testing.T) {
 	require.NotEmpty(t, out.String(), "Output should not be empty after logging at minimum level")
 	require.Equal(t, "<nil> DBG meow cats=5\n", out.String(), "Output is formatted prettily")
 	out.Reset()
+}
+
+func TestWriterConfig_Compile_TimeFormat(t *testing.T) {
+	var out bytes.Buffer
+	zeroconfig.Stdout = &out
+	log := compile(t, `{
+	  "writers": [
+	    {"type": "stdout", "format": "pretty", "time_format": "2006"}
+	  ],
+	  "min_level": "debug"
+	}`)
+
+	require.Equal(t, time.Now().Year(), time.Now().Add(5*time.Second).Year(), "This test can't be ran at midnight right before the new year")
+
+	log.Debug().Int("cats", 5).Msg("meow")
+	require.Equal(t, strconv.Itoa(time.Now().Year())+" DBG meow cats=5\n", out.String(), "Output has current year as date")
 }
 
 func TestWriterConfig_Compile_MultiLevel_Stdio(t *testing.T) {
