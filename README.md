@@ -13,6 +13,9 @@ timestamps: true
 # Should logs include the caller function? Defaults to false.
 caller: false
 
+# Additional log metadata to add globally. Map from string key to arbitrary value.
+metadata: null
+
 # List of writers to output logs to.
 # The `type` field is always required. `format`, `min_level` and `max_level` can be specified for any type of writer.
 # Some types have additional custom configuration

@@ -56,6 +56,26 @@ func TestWriterConfig_Compile_Stdout(t *testing.T) {
 	out.Reset()
 }
 
+func TestWriterConfig_Compile_Metadata(t *testing.T) {
+	var out bytes.Buffer
+	zeroconfig.Stdout = &out
+	log := compile(t, `{
+	  "writers": [
+	    {"type": "stdout", "format": "pretty"}
+	  ],
+	  "metadata": {
+	    "meow": 5,
+	    "foo": {"bar": "asd"}
+	  },
+	  "timestamp": false
+	}`)
+
+	log.Debug().Msg("meow")
+	require.NotEmpty(t, out.String(), "Output should not be empty after logging")
+	require.Equal(t, `<nil> DBG meow foo={"bar":"asd"} meow=5`+"\n", out.String(), "Output contains global metadata fields")
+	out.Reset()
+}
+
 func TestWriterConfig_Compile_TimeFormat(t *testing.T) {
 	var out bytes.Buffer
 	zeroconfig.Stdout = &out

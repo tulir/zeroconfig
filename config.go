@@ -11,6 +11,7 @@ import (
 	"io"
 	"log/syslog"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -102,6 +103,8 @@ type Config struct {
 
 	Timestamp *bool `json:"timestamp,omitempty" yaml:"timestamp,omitempty"`
 	Caller    bool  `json:"caller,omitempty" yaml:"caller,omitempty"`
+
+	Metadata map[string]any `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
 
 // Outputs used for the stdout and stderr writer types.
@@ -211,6 +214,18 @@ func (c *Config) Compile() (*zerolog.Logger, error) {
 	}
 	if c.Caller {
 		with = with.Caller()
+	}
+	if len(c.Metadata) > 0 {
+		keys := make([]string, len(c.Metadata))
+		i := 0
+		for key := range c.Metadata {
+			keys[i] = key
+			i++
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
+			with = with.Interface(key, c.Metadata[key])
+		}
 	}
 	log := with.Logger()
 	if c.MinLevel != nil {
