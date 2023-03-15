@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/journald"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -113,41 +112,47 @@ var (
 	Stderr io.Writer = os.Stderr
 )
 
+func compileUnsupported(wc *WriterConfig) (io.Writer, error) {
+	return nil, fmt.Errorf("writer type %q not supported on this OS", wc.Type)
+}
+
+type WriterCompiler = func(*WriterConfig) (io.Writer, error)
+
+var writerCompilers = map[WriterType]WriterCompiler{
+	WriterTypeStdout:    func(_ *WriterConfig) (io.Writer, error) { return Stdout, nil },
+	WriterTypeStderr:    func(_ *WriterConfig) (io.Writer, error) { return Stderr, nil },
+	WriterTypeFile:      compileFile,
+	WriterTypeJournald:  compileUnsupported,
+	WriterTypeSyslog:    compileUnsupported,
+	WriterTypeSyslogCEE: compileUnsupported,
+}
+
+func RegisterWriter(wt WriterType, compiler WriterCompiler) {
+	writerCompilers[wt] = compiler
+}
+
+func compileFile(wc *WriterConfig) (io.Writer, error) {
+	writer := &lumberjack.Logger{
+		Filename:   wc.Filename,
+		MaxSize:    wc.MaxSize,
+		MaxAge:     wc.MaxAge,
+		MaxBackups: wc.MaxBackups,
+		LocalTime:  wc.LocalTime,
+		Compress:   wc.Compress,
+	}
+	err := writer.Rotate()
+	if err != nil {
+		return nil, err
+	}
+	return writer, nil
+}
+
 func (wc *WriterConfig) compileMain() (io.Writer, error) {
-	switch wc.Type {
-	case WriterTypeStdout:
-		return Stdout, nil
-	case WriterTypeStderr:
-		return Stderr, nil
-	case WriterTypeFile:
-		writer := &lumberjack.Logger{
-			Filename:   wc.Filename,
-			MaxSize:    wc.MaxSize,
-			MaxAge:     wc.MaxAge,
-			MaxBackups: wc.MaxBackups,
-			LocalTime:  wc.LocalTime,
-			Compress:   wc.Compress,
-		}
-		err := writer.Rotate()
-		if err != nil {
-			return nil, err
-		}
-		return writer, nil
-	case WriterTypeSyslog, WriterTypeSyslogCEE:
-		sl, err := syslog.Dial(wc.Network, wc.Host, wc.Flags, wc.Tag)
-		if err != nil {
-			return nil, err
-		}
-		if wc.Type == WriterTypeSyslogCEE {
-			return zerolog.SyslogCEEWriter(sl), nil
-		} else {
-			return zerolog.SyslogLevelWriter(sl), nil
-		}
-	case WriterTypeJournald:
-		return journald.NewJournalDWriter(), nil
-	default:
+	compiler, ok := writerCompilers[wc.Type]
+	if !ok {
 		return nil, fmt.Errorf("unknown writer type %q", wc.Type)
 	}
+	return compiler(wc)
 }
 
 func levelPtr(ptr *zerolog.Level) zerolog.Level {
