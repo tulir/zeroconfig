@@ -12,7 +12,6 @@ import (
 	"log/syslog"
 	"os"
 	"sort"
-	"time"
 
 	"github.com/rs/zerolog"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -181,7 +180,7 @@ func (wc *WriterConfig) Compile() (io.Writer, error) {
 		if wc.TimeFormat != "" {
 			wrapper.TimeFormat = wc.TimeFormat
 		} else {
-			wrapper.TimeFormat = time.RFC3339
+			wrapper.TimeFormat = "2006-01-02T15:04:05.999Z07:00"
 		}
 		output = wrapper
 	default:
