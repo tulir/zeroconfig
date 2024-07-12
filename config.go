@@ -9,7 +9,6 @@ package zeroconfig
 import (
 	"fmt"
 	"io"
-	"log/syslog"
 	"os"
 	"sort"
 
@@ -22,10 +21,10 @@ import (
 // See https://pkg.go.dev/log/syslog for exact details.
 type SyslogConfig struct {
 	// All parameters are passed to https://pkg.go.dev/log/syslog#Dial directly.
-	Network string          `json:"network,omitempty" yaml:"network,omitempty"`
-	Host    string          `json:"host,omitempty" yaml:"host,omitempty"`
-	Flags   syslog.Priority `json:"flags,omitempty" yaml:"flags,omitempty"`
-	Tag     string          `json:"tag,omitempty" yaml:"tag,omitempty"`
+	Network string `json:"network,omitempty" yaml:"network,omitempty"`
+	Host    string `json:"host,omitempty" yaml:"host,omitempty"`
+	Flags   int    `json:"flags,omitempty" yaml:"flags,omitempty"`
+	Tag     string `json:"tag,omitempty" yaml:"tag,omitempty"`
 }
 
 // FileConfig contains the configuration options for the file writer.

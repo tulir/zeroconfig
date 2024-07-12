@@ -17,7 +17,7 @@ import (
 )
 
 func compileSyslog(wc *WriterConfig) (io.Writer, error) {
-	sl, err := syslog.Dial(wc.Network, wc.Host, wc.Flags, wc.Tag)
+	sl, err := syslog.Dial(wc.Network, wc.Host, syslog.Priority(wc.Flags), wc.Tag)
 	if err != nil {
 		return nil, err
 	}
