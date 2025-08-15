@@ -67,6 +67,10 @@ writers:
 # `journald` writes to systemd's logging service using https://github.com/coreos/go-systemd.
 # It has no custom configuration fields.
 - type: journald
+
+# `js` writes to the JavaScript console. It only works when compiling to WASM.
+# It will also ignore the `format` field and do custom formatting internally.
+- type: js
 ```
 
 ## Usage example

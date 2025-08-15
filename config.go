@@ -63,6 +63,9 @@ const (
 	WriterTypeSyslogCEE WriterType = "syslog-cee"
 	// WriterTypeJournald writes to systemd's logging service.
 	WriterTypeJournald WriterType = "journald"
+	// WriterTypeJS writes to a JavaScript console.
+	// Only usable in environments where syscall/js is available (i.e. GOOS=js/GOARCH=wasm).
+	WriterTypeJS WriterType = "js"
 )
 
 // LogFormat describes how logs should be formatted for a writer.
